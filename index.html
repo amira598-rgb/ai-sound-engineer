@@ -1,0 +1,72 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI SOUND ENGINEER v2</title>
+<style>
+:root{color-scheme:dark;--bg:#0a1020;--panel:#151f34;--muted:#a5b2cb;--line:#2b3a58;--accent:#70e1c1}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0,#1b3150,transparent 36%),var(--bg);color:#f4f7ff;font:15px system-ui,Segoe UI,sans-serif}
+main{max-width:980px;margin:auto;padding:26px 16px 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:clamp(26px,5vw,40px);margin:0;letter-spacing:-1px}.sub,.note{color:var(--muted)}.sub{margin:7px 0 22px}
+.pill{border:1px solid #326b60;color:var(--accent);padding:7px 11px;border-radius:20px;font-size:12px}
+.card{background:linear-gradient(145deg,#18233b,#11192b);border:1px solid var(--line);border-radius:18px;padding:19px;margin:14px 0}
+h2{font-size:18px;margin:0 0 14px}.drop{border:1px dashed #55708f;border-radius:14px;padding:22px;text-align:center;background:#0c1425}
+input[type=file]{max-width:100%;margin:12px 0}label{display:block;color:#c8d2e8;margin:12px 0 6px}
+select,button{font:inherit;border-radius:10px;padding:11px 13px;border:1px solid var(--line);background:#0c1425;color:#fff}
+select{width:100%}button{background:var(--accent);color:#06221b;font-weight:750;border:0;cursor:pointer}button:disabled{opacity:.5}
+.secondary{background:#263653;color:#f4f7ff}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.control,.stat{background:#0d1628;padding:12px;border:1px solid #263550;border-radius:12px}
+input[type=range]{width:100%;accent-color:var(--accent)}.val{float:right;color:var(--accent)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}#status,#roomStatus{color:var(--accent);min-height:22px;margin-top:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px}.stat b{display:block;font-size:20px}.stat small{color:var(--muted)}
+.note{font-size:13px;line-height:1.5}.warning{border-left:3px solid #e7b65c;padding:9px 12px;background:#342b1b;color:#f4dcae;border-radius:5px;font-size:13px;line-height:1.5}
+img.preview{max-width:100%;max-height:260px;border-radius:12px;margin-top:10px;display:none}pre{white-space:pre-wrap;overflow-wrap:anywhere;color:#c8d2e8;font-size:12px}audio{width:100%;margin-top:12px}
+</style></head><body><main>
+<div class="top"><div><h1>AI SOUND ENGINEER</h1><div class="sub">v2.0 · Natural Voice + AI Space Acoustics</div></div><span class="pill">LOCAL PROCESSING</span></div>
+
+<section class="card"><h2>01 / Фото пространства</h2>
+<div class="drop">Загрузите фотографию комнаты, студии или зала<br><input id="photo" type="file" accept="image/jpeg,image/png,image/webp"><div class="note">JPG / PNG / WEBP · до 12 МБ</div><img id="preview" class="preview" alt="Предпросмотр фото"></div>
+<div class="actions"><button id="roomAnalyze">Проанализировать пространство</button></div><div id="roomStatus"></div><div id="roomResult"></div>
+<p class="warning">Важно: фото даёт только предварительную визуальную оценку. Оно не измеряет эхо, RT60, точные размеры и скрытые материалы. Для достоверной коррекции нужна акустическая запись или измерительный тест.</p>
+</section>
+
+<section class="card"><h2>02 / Исходный голос</h2>
+<div class="drop">Выберите аудиофайл<br><input id="file" type="file" accept=".wav,.flac,.aiff,.aif,.ogg,audio/*"><div class="note">WAV, FLAC, AIFF, OGG · максимум 150 МБ</div></div>
+<div class="actions"><button id="analyze">Анализировать аудио</button></div><div id="analysis"></div>
+</section>
+
+<section class="card"><h2>03 / Natural Voice Engine</h2>
+<div class="grid">
+<div><label>Профиль</label><select id="profile"><option value="voice">Естественная речь</option><option value="podcast">Подкаст</option><option value="music">Музыка</option><option value="room">Помещение</option><option value="outdoor">Улица</option></select></div>
+<div><label>Управление</label><select id="mode"><option value="hybrid">Гибридный</option><option value="automatic">Автоматический</option></select></div></div>
+<div class="grid" id="sliders">
+<div class="control"><label>Шумоподавление <span class="val" id="denoiseV">20%</span></label><input id="denoise" type="range" min="0" max=".8" step=".01" value=".2"></div>
+<div class="control"><label>Низкие <span class="val" id="bassV">0 dB</span></label><input id="bass" type="range" min="-6" max="6" step=".5" value="0"></div>
+<div class="control"><label>Средние <span class="val" id="midV">0 dB</span></label><input id="mid" type="range" min="-6" max="6" step=".5" value="0"></div>
+<div class="control"><label>Высокие <span class="val" id="trebleV">0 dB</span></label><input id="treble" type="range" min="-6" max="6" step=".5" value="0"></div>
+<div class="control"><label>Компрессия <span class="val" id="compressionV">20%</span></label><input id="compression" type="range" min="0" max="1" step=".01" value=".2"></div>
+<div class="control"><label>Целевой RMS <span class="val" id="targetV">-18 dBFS</span></label><input id="target" type="range" min="-24" max="-10" step="1" value="-18"></div>
+</div>
+<div class="actions"><button id="process">Обработать голос</button><button class="secondary" id="reset">Сбросить настройки</button></div><div id="status"></div>
+</section>
+
+<section class="card" id="result" hidden><h2>04 / Обработанный голос</h2><div id="report"></div><audio id="player" controls></audio><div class="actions"><a id="download"><button>Скачать WAV 24-bit</button></a></div></section>
+<p class="note">Фотоанализ использует локальную vision-модель Ollama, если она установлена. Без неё приложение сообщит, что семантический анализ недоступен, и не будет делать вид, что распознало материалы. Файлы обрабатываются на вашем сервере. Не выставляйте сервер в интернет без авторизации и TLS.</p>
+</main>
+<script>
+const $=id=>document.getElementById(id), sliders=['denoise','bass','mid','treble','compression','target'];
+const fmt={denoise:v=>Math.round(v*100)+'%',bass:v=>v+' dB',mid:v=>v+' dB',treble:v=>v+' dB',compression:v=>Math.round(v*100)+'%',target:v=>v+' dBFS'};
+sliders.forEach(k=>$(k).oninput=()=>$(k+'V').textContent=fmt[k]($(k).value));
+let roomProfile=null;
+$('photo').onchange=()=>{const f=$('photo').files[0];if(!f)return;const img=$('preview');img.src=URL.createObjectURL(f);img.style.display='block';roomProfile=null;$('roomResult').textContent='Фото изменено. Выполните анализ заново.'};
+$('roomAnalyze').onclick=async()=>{const f=$('photo').files[0];if(!f){$('roomStatus').textContent='Сначала выберите фотографию.';return}
+$('roomAnalyze').disabled=true;$('roomStatus').textContent='Анализируем изображение…';
+try{const fd=new FormData();fd.append('file',f);const r=await fetch('/api/room/analyze',{method:'POST',body:fd});const d=await r.json();if(!r.ok)throw Error(d.detail||'Ошибка анализа');roomProfile=d;
+$('roomResult').innerHTML=`<div class="stats"><div class="stat"><b>${d.room_type_guess||'Не определён'}</b><small>Тип пространства</small></div><div class="stat"><b>${d.visual_reflection_risk||'unknown'}</b><small>Визуальный риск отражений</small></div><div class="stat"><b>${Math.round((d.confidence||0)*100)}%</b><small>Уверенность</small></div></div><p>${d.natural_voice_advice||''}</p><p class="note">Видимые признаки: ${(d.visible_surfaces||[]).join(', ')||'нет достоверно распознанных'}</p><p class="note">${d.photo_only_warning||''}</p><p class="note">Метод: ${d.analysis_method}</p>`;
+$('roomStatus').textContent='Фотоанализ завершён.'}catch(e){$('roomStatus').textContent=e.message}finally{$('roomAnalyze').disabled=false}};
+function metrics(d){return `<div class="stats"><div class="stat"><b>${d.duration_seconds}s</b><small>Длительность</small></div><div class="stat"><b>${d.sample_rate} Hz</b><small>Sample rate</small></div><div class="stat"><b>${d.peak_dbfs} dBFS</b><small>Peak</small></div><div class="stat"><b>${d.rms_dbfs} dBFS</b><small>RMS</small></div></div><p class="note">${d.note||''}</p>`}
+function getAudio(){const f=$('file').files[0];if(!f)$('status').textContent='Сначала выберите аудиофайл.';return f}
+$('analyze').onclick=async()=>{const f=getAudio();if(!f)return;$('analyze').disabled=true;$('status').textContent='Анализ аудио…';try{const fd=new FormData();fd.append('file',f);const r=await fetch('/api/analyze',{method:'POST',body:fd}),d=await r.json();if(!r.ok)throw Error(d.detail);$('analysis').innerHTML=metrics(d);$('status').textContent='Анализ завершён.'}catch(e){$('status').textContent=e.message}finally{$('analyze').disabled=false}};
+$('process').onclick=async()=>{const f=getAudio();if(!f)return;$('process').disabled=true;$('status').textContent='Обработка голоса…';try{const fd=new FormData();fd.append('file',f);fd.append('profile',$('profile').value);fd.append('mode',$('mode').value);for(const k of sliders)fd.append(k==='target'?'target_db':k,$(k).value);fd.append('room_profile',JSON.stringify(roomProfile||{}));
+const r=await fetch('/api/process',{method:'POST',body:fd}),d=await r.json();if(!r.ok)throw Error(d.detail||'Ошибка');$('player').src=d.download_url;$('download').href=d.download_url;$('result').hidden=false;
+const q=d.report;$('report').innerHTML=metrics({duration_seconds:q.duration_seconds,sample_rate:q.sample_rate,peak_dbfs:q.peak_after_dbfs,rms_dbfs:q.rms_after_dbfs,note:q.photo_room_context})+`<pre>${JSON.stringify(q.settings,null,2)}\n${(q.limitations||[]).join('\n')}</pre>`;
+$('status').textContent='Обработка завершена. Прослушайте результат.';$('result').scrollIntoView({behavior:'smooth'})}catch(e){$('status').textContent=e.message}finally{$('process').disabled=false}};
+$('reset').onclick=()=>{const v={denoise:.2,bass:0,mid:0,treble:0,compression:.2,target:-18};for(const [k,x] of Object.entries(v)){$(k).value=x;$(k+'V').textContent=fmt[k](x)}};
+</script></body></html>
